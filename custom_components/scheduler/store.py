@@ -50,6 +50,7 @@ class TimeslotEntry:
     condition_type = attr.ib(type=str, default=None)
     track_conditions = attr.ib(type=bool, default=False)
     actions = attr.ib(type=[ActionEntry], default=[])
+    color = attr.ib(type=str, default=None)
 
 
 @attr.s(slots=True, frozen=True)
@@ -104,10 +105,7 @@ class MigratableStore(Store):
                 for el in timeslots
             ):
                 return [
-                    {
-                        **slot,
-                        "conditions": timeslots[0]["conditions"]
-                    }
+                    {**slot, "conditions": timeslots[0]["conditions"]}
                     for slot in timeslots
                 ]
             return timeslots
@@ -117,12 +115,16 @@ class MigratableStore(Store):
                 [
                     {
                         **entry,
-                        const.ATTR_START_DATE: entry[const.ATTR_START_DATE]
-                        if const.ATTR_START_DATE in entry
-                        else None,
-                        const.ATTR_END_DATE: entry[const.ATTR_END_DATE]
-                        if const.ATTR_END_DATE in entry
-                        else None,
+                        const.ATTR_START_DATE: (
+                            entry[const.ATTR_START_DATE]
+                            if const.ATTR_START_DATE in entry
+                            else None
+                        ),
+                        const.ATTR_END_DATE: (
+                            entry[const.ATTR_END_DATE]
+                            if const.ATTR_END_DATE in entry
+                            else None
+                        ),
                     }
                     for entry in data["schedules"]
                 ]
@@ -134,7 +136,9 @@ class MigratableStore(Store):
                 [
                     {
                         **entry,
-                        const.ATTR_TIMESLOTS: remove_unequal_number_conditions(entry[const.ATTR_TIMESLOTS])
+                        const.ATTR_TIMESLOTS: remove_unequal_number_conditions(
+                            entry[const.ATTR_TIMESLOTS]
+                        ),
                     }
                     for entry in data["schedules"]
                 ]
@@ -226,6 +230,7 @@ class ScheduleStorage:
                     const.ATTR_CONDITION_TYPE: slot.condition_type,
                     const.ATTR_TRACK_CONDITIONS: slot.track_conditions,
                     const.ATTR_ACTIONS: [],
+                    const.ATTR_COLOR: slot.color,
                 }
                 if slot.conditions:
                     for condition in slot.conditions:
@@ -260,7 +265,7 @@ class ScheduleStorage:
     def async_get_schedules(self) -> dict:
         """Get an existing ScheduleEntry by id."""
         res = {}
-        for (key, val) in self.schedules.items():
+        for key, val in self.schedules.items():
             res[key] = attr.asdict(val)
         return res
 
@@ -311,7 +316,7 @@ class ScheduleStorage:
     def async_get_tags(self) -> dict:
         """Get an existing TagEntry by id."""
         res = {}
-        for (key, val) in self.tags.items():
+        for key, val in self.tags.items():
             res[key] = attr.asdict(val)
         return res
 
@@ -358,6 +363,7 @@ class ScheduleStorage:
         """Set the shutdown time and store it immediately."""
         self.time_shutdown = value
         await self.async_save()
+
 
 @bind_hass
 async def async_get_registry(hass: HomeAssistant) -> ScheduleStorage:

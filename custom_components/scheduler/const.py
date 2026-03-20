@@ -1,4 +1,5 @@
 """Store constants."""
+
 import voluptuous as vol
 import re
 import homeassistant.util.dt as dt_util
@@ -70,6 +71,7 @@ ATTR_TAGS = "tags"
 ATTR_SCHEDULES = "schedules"
 ATTR_START_DATE = "start_date"
 ATTR_END_DATE = "end_date"
+ATTR_COLOR = "color"
 
 EVENT_TIMER_FINISHED = "scheduler_timer_finished"
 EVENT_TIMER_UPDATED = "scheduler_timer_updated"
@@ -113,6 +115,19 @@ def validate_date(value: str) -> str:
         return date.strftime("%Y-%m-%d")
 
 
+def validate_color(value: str) -> str:
+    """Input must be a valid CSS color string (hex, rgb, hsl) or None."""
+    if value is None:
+        return None
+    if re.match(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", value):
+        return value
+    if re.match(r"^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$", value):
+        return value
+    if re.match(r"^hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)$", value):
+        return value
+    raise vol.Invalid("Invalid color value: {}".format(value))
+
+
 CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -149,6 +164,7 @@ TIMESLOT_SCHEMA = vol.Schema(
         vol.Required(ATTR_ACTIONS): vol.All(
             cv.ensure_list, vol.Length(min=1), [ACTION_SCHEMA]
         ),
+        vol.Optional(ATTR_COLOR): validate_color,
     }
 )
 
