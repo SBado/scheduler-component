@@ -116,14 +116,10 @@ def validate_date(value: str) -> str:
 
 
 def validate_color(value: str) -> str:
-    """Input must be a valid CSS color string (hex, rgb, hsl) or None."""
+    """Input must be a valid CSS hex color string (#rrggbb) or None."""
     if value is None:
         return None
-    if re.match(r"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", value):
-        return value
-    if re.match(r"^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$", value):
-        return value
-    if re.match(r"^hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%\s*,\s*\d{1,3}%\s*\)$", value):
+    if re.match(r"^#[0-9a-fA-F]{6}$", value):
         return value
     raise vol.Invalid("Invalid color value: {}".format(value))
 
